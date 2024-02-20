@@ -42,17 +42,26 @@ namespace :asdf do
     end
   end
 
+  desc "Install ASDF tools on deploy"
+  task :deploy do
+    on roles(fetch(:asdf_roles, :all)) do
+      invoke 'asdf:upload_wrapper'
+      invoke 'asdf:check'
+      invoke 'asdf:install'
+    end
+  end
+
   desc "Prints the ASDF tools versions on the target host"
   task :check do
     on roles(fetch(:asdf_roles, :all)) do
-      execute("#{fetch(:asdf_wrapper_path)} asdf current")
+      execute("cd #{release_path || current_path} && #{fetch(:asdf_wrapper_path)} asdf current")
     end
   end
 
   desc "Install ASDF tools versions based on the .tool-versions of your project"
   task :install do
     on roles(fetch(:asdf_roles, :all)) do
-      execute("#{fetch(:asdf_wrapper_path)} asdf install")
+      execute("cd #{release_path || current_path} && #{fetch(:asdf_wrapper_path)} asdf install")
     end
   end
 
@@ -64,7 +73,7 @@ namespace :asdf do
         if already_installed_plugins.include?(asdf_tool)
           info "#{asdf_tool} Already installed"
         else
-          execute("#{fetch(:asdf_wrapper_path)} asdf plugin add #{asdf_tool}")
+          execute("cd #{release_path || current_path} && #{fetch(:asdf_wrapper_path)} asdf plugin add #{asdf_tool}")
         end
       end
     end
@@ -88,8 +97,8 @@ namespace :asdf do
 
 end
 
+after 'deploy:updating', 'asdf:deploy'
 before 'asdf:install', 'asdf:add_plugins'
-after 'deploy:check', 'asdf:check'
 before 'asdf:check', 'asdf:upload_wrapper'
 
 Capistrano::DSL.stages.each do |stage|
