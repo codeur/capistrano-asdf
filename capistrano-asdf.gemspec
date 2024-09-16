@@ -12,6 +12,8 @@ Gem::Specification.new do |gem|
   gem.summary       = %q{ASDF integration for Capistrano}
   gem.homepage      = "https://github.com/codeur/capistrano-asdf"
 
+  gem.metadata['allowed_push_host'] = 'https://gems.codeur.com'
+
   gem.files         = `git ls-files`.split($/)
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.require_paths = ["lib"]
