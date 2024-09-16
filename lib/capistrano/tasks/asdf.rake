@@ -5,18 +5,25 @@ ASDF_DEFAULT_RUBY_BINS = %w{rake gem bundle ruby rails}
 # Nodejs related bin
 ASDF_DEFAULT_NODEJS_BINS = %w{node npm yarn}
 
-ASDF_DEFAULT_WRAPPER_TEMPLATES = <<~WRAPPER
+ASDF_DEFAULT_WRAPPER_TEMPLATES = <<~SH
   #!/usr/bin/env bash
+
+  # Use jemalloc for Ruby compilation if available
+  if [ -f @@ASDF_JEMALLOC_PATH@@/jemalloc.h ]; then
+    export RUBY_CONFIGURE_OPTS="--with-jemalloc=@@ASDF_JEMALLOC_PATH@@"
+  fi
 
   . @@ASDF_USER_PATH@@/asdf.sh
   exec "$@"
-WRAPPER
+SH
 
 namespace :asdf do
   desc "Upload ASDF wrapper to the target host"
   task :upload_wrapper do
     on roles(fetch(:asdf_roles, :all)) do
-      wrapper_content = ASDF_DEFAULT_WRAPPER_TEMPLATES.gsub('@@ASDF_USER_PATH@@', fetch(:asdf_path))
+      wrapper_content = ASDF_DEFAULT_WRAPPER_TEMPLATES
+        .gsub('@@ASDF_USER_PATH@@', fetch(:asdf_path))
+        .gsub('@@ASDF_JEMALLOC_PATH@@', fetch(:asdf_jemalloc_path))
       need_to_upload_wrapper = true
       # Check if the wrapper already exists
       if test("[ -f #{fetch(:asdf_wrapper_path)} ]")
@@ -115,6 +122,8 @@ namespace :load do
     set :asdf_wrapper_path, -> {
       fetch(:asdf_custom_wrapper_path) || "#{shared_path}/asdf-wrapper"
     }
+
+    set :asdf_jemalloc_path, fetch(:asdf_jemalloc_path, '/usr/include/jemalloc')
 
     set :asdf_tools, fetch(:asdf_tools, ASDF_DEFAULT_TOOLS)
 

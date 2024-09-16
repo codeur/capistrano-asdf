@@ -1,3 +1,7 @@
+## 1.2.0
+
+Add jemalloc support for Ruby.
+
 ## 1.1.1
 
 Fix ASDF wrapper.
