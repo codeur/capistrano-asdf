@@ -1,3 +1,9 @@
+# Changelog
+
+## 1.3.0
+
+Remove asdf-wrapper script and use `asdf exec` instead.
+
 ## 1.2.0
 
 Add jemalloc support for Ruby.
