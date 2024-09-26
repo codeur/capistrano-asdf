@@ -1,12 +1,18 @@
 # Changelog
 
+
+## 1.4.0
+
+Make `jemalloc` optional for Ruby with `asdf_ruby_use_jemalloc` variable.
+Add tasks `asdf:uninstall:ruby` and `asdf:uninstall:nodejs` to uninstall Ruby and NodeJS current versions.
+
 ## 1.3.0
 
-Remove asdf-wrapper script and use `asdf exec` instead.
+Remove `asdf-wrapper` script and use `asdf exec` instead.
 
 ## 1.2.0
 
-Add jemalloc support for Ruby.
+Add `jemalloc` support for Ruby.
 
 ## 1.1.1
 
