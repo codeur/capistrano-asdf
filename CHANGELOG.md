@@ -1,6 +1,10 @@
 # Changelog
 
 
+## 1.4.1
+
+Fix task loading.
+
 ## 1.4.0
 
 Make `jemalloc` optional for Ruby with `asdf_ruby_use_jemalloc` variable.
