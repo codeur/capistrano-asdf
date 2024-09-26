@@ -1,4 +1,12 @@
-source 'https://rubygems.org'
+# frozen_string_literal: true
 
-# Specify your gem's dependencies in capistrano-rvm.gemspec
+source "https://rubygems.org"
+
+# Specify your gem's dependencies in capistrano-asdf.gemspec
 gemspec
+
+gem "rake", "~> 13.0"
+
+gem "minitest", "~> 5.14"
+
+gem "standard", "~> 1.3"
