@@ -1,3 +1,3 @@
 # frozen_string_literal: true
 
-load File.expand_path("../tasks/asdf.rake", __FILE__)
+load File.expand_path('tasks/asdf.rake', __dir__)

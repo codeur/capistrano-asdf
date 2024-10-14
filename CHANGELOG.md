@@ -1,6 +1,11 @@
 # Changelog
 
 
+## 1.4.2
+
+Fix plugin installation when no plugins are installed.
+Clean code.
+
 ## 1.4.1
 
 Fix task loading.
