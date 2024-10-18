@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.0
+
+Add `asdf:setup` task to install ASDF on `asdf_path` if not already installed.
+It will clone the ASDF repository, see [ASDF installation](https://asdf-vm.com/guide/getting-started.html).
 
 ## 1.4.2
 
@@ -40,7 +44,7 @@ Add asdf:install and asdf:add_plugins tasks
 
 Add some configuration options:
 
-    set :asdf_custom_path, '~/.my_asdf_installation_path'  # only needed if not '~/.asdf'
+    set :asdf_path, '~/.my_asdf_installation_path'  # only needed if not '~/.asdf'
     set :asdf_tools, %w{ ruby }                            # defaults to %{ ruby nodejs }
     set :asdf_map_ruby_bins, %w{ bundle gem }              # defaults to %w{ rake gem bundle ruby rails }
     set :asdf_map_nodejs_bins, %w{ node npm }              # defaults to %w{ node npm yarn }

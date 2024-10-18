@@ -4,6 +4,7 @@ namespace :asdf do
   desc 'Install ASDF tools on deploy'
   task :deploy do
     on roles(fetch(:asdf_roles)) do
+      invoke 'asdf:setup'
       invoke 'asdf:check'
       invoke 'asdf:install'
     end
@@ -14,6 +15,19 @@ namespace :asdf do
     on roles(fetch(:asdf_roles)) do
       within(release_path) do
         execute(:asdf, 'current')
+      end
+    end
+  end
+
+  desc 'Setup ASDF on the target host'
+  task :setup do
+    if fetch(:asdf_setup)
+      on roles(fetch(:asdf_roles)) do
+        if test("[ -d #{fetch(:asdf_path)} ]")
+          info "ASDF is installed on #{fetch(:asdf_path)}"
+        else
+          execute(:git, 'clone', fetch(:asdf_repository), fetch(:asdf_path), '--branch', fetch(:asdf_version))
+        end
       end
     end
   end
@@ -104,7 +118,10 @@ end
 
 namespace :load do
   task :defaults do
-    set :asdf_path, fetch(:asdf_custom_path, '~/.asdf')
+    set :asdf_path, fetch(:asdf_path, '~/.asdf')
+    set :asdf_repository, fetch(:asdf_repository, 'https://github.com/asdf-vm/asdf.git')
+    set :asdf_version, fetch(:asdf_version, 'v0.14.1')
+    set :asdf_setup, fetch(:asdf_setup, true)
     set :asdf_roles, fetch(:asdf_roles, :all)
     set :asdf_ruby_use_jemalloc, fetch(:asdf_ruby_use_jemalloc, true)
     set :asdf_jemalloc_path, fetch(:asdf_jemalloc_path, '/usr/include/jemalloc')

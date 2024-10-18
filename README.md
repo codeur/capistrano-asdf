@@ -35,12 +35,12 @@ However we strongly encourage you to use the `.tool-versions` for proper tool ve
 If you need some special settings, set those in the stage file for your server:
 
     # deploy.rb or stage file (staging.rb, production.rb or else)
-    set :asdf_custom_path, '~/.my_asdf_installation_path'  # only needed if not '~/.asdf'
+    set :asdf_path, '~/.my_asdf_installation_path'  # only needed if not '~/.asdf'
     set :asdf_tools, %w{ ruby }                            # defaults to %{ ruby nodejs }
     set :asdf_map_ruby_bins, %w{ bundle gem }              # defaults to %w{ rake gem bundle ruby rails }
     set :asdf_map_nodejs_bins, %w{ node npm }              # defaults to %w{ node npm yarn }
 
-### Custom ASDF path: `:asdf_custom_path`
+### Custom ASDF path: `:asdf_path`
 
 If you have a custom ASDF setup with a different path then expected, you have
 to define a custom ASDF path to tell capistrano where it is.
