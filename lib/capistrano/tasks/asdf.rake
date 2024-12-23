@@ -36,7 +36,6 @@ namespace :asdf do
   task :install do
     on roles(fetch(:asdf_roles)) do
       within(release_path) do
-        execute(:asdf, 'update')
         already_installed_plugins = capture(:asdf, 'plugin', 'list')&.split
         fetch(:asdf_tools)&.each do |tool|
           if already_installed_plugins.include?(tool)
