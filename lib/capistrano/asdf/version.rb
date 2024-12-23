@@ -2,6 +2,6 @@
 
 module Capistrano
   module Asdf
-    VERSION = '1.5.1'
+    VERSION = "1.5.1"
   end
 end
