@@ -24,9 +24,18 @@ namespace :asdf do
     if fetch(:asdf_setup)
       on roles(fetch(:asdf_roles)) do
         if test("[ -d #{fetch(:asdf_path)} ]")
-          info "ASDF is installed on #{fetch(:asdf_path)}"
+          within(fetch(:asdf_path)) do
+            version = capture(:cat, "version.txt").strip
+            if fetch(:asdf_version) == version
+              info "ASDF #{fetch(:asdf_version)} is already installed on #{fetch(:asdf_path)}"
+            else
+              execute :git, "checkout", "v#{fetch(:asdf_version)}"
+              info "ASDF is updated from #{version} to #{fetch(:asdf_version)} (on #{fetch(:asdf_path)})"
+            end
+          end
         else
           execute(:git, "clone", fetch(:asdf_repository), fetch(:asdf_path), "--branch", fetch(:asdf_version))
+          info "ASDF #{fetch(:asdf_version)} is installed on #{fetch(:asdf_path)}"
         end
       end
     end
@@ -61,20 +70,13 @@ namespace :asdf do
   end
 
   namespace :uninstall do
-    desc "Uninstall ASDF Ruby version based on the .tool-versions of your project"
-    task :ruby do
-      on roles(fetch(:asdf_roles)) do
-        within(release_path) do
-          execute(:asdf, "uninstall", "ruby")
-        end
-      end
-    end
-
-    desc "Uninstall ASDF NodeJS version based on the .tool-versions of your project"
-    task :nodejs do
-      on roles(fetch(:asdf_roles)) do
-        within(release_path) do
-          execute(:asdf, "uninstall", "nodejs")
+    %i[ruby nodejs].each do |tool|
+      desc "Uninstall ASDF #{tool} version based on the .tool-versions of your project"
+      task tool do
+        on roles(fetch(:asdf_roles)) do
+          within(release_path) do
+            execute(:asdf, "uninstall", tool.to_s)
+          end
         end
       end
     end
@@ -87,22 +89,16 @@ namespace :asdf do
     asdf_prefix = fetch(:asdf_prefix, -> { "#{fetch(:asdf_path)}/bin/asdf exec" })
     SSHKit.config.command_map[:asdf] = "#{fetch(:asdf_path)}/bin/asdf"
 
-    if fetch(:asdf_tools).include?("ruby")
-      if fetch(:asdf_ruby_use_jemalloc)
-        on roles(fetch(:asdf_roles)) do
-          if test("[ -f #{fetch(:asdf_jemalloc_path)}/jemalloc.h ]")
-            SSHKit.config.default_env.merge!(ruby_configure_opts: "--with-jemalloc=#{fetch(:asdf_jemalloc_path)}")
-          end
+    if fetch(:asdf_tools).include?("ruby") && fetch(:asdf_ruby_use_jemalloc)
+      on roles(fetch(:asdf_roles)) do
+        if test("[ -f #{fetch(:asdf_jemalloc_path)}/jemalloc.h ]")
+          SSHKit.config.default_env.merge!(ruby_configure_opts: "--with-jemalloc=#{fetch(:asdf_jemalloc_path)}")
         end
-      end
-
-      fetch(:asdf_map_ruby_bins).uniq.each do |command|
-        SSHKit.config.command_map.prefix[command.to_sym].unshift(asdf_prefix)
       end
     end
 
-    if fetch(:asdf_tools).include?("nodejs")
-      fetch(:asdf_map_nodejs_bins).uniq.each do |command|
+    fetch(:asdf_tools).each do |tool|
+      fetch(:"asdf_map_#{tool}_bins", []).uniq.each do |command|
         SSHKit.config.command_map.prefix[command.to_sym].unshift(asdf_prefix)
       end
     end
@@ -119,7 +115,7 @@ namespace :load do
   task :defaults do
     set :asdf_path, fetch(:asdf_path, "~/.asdf")
     set :asdf_repository, fetch(:asdf_repository, "https://github.com/asdf-vm/asdf.git")
-    set :asdf_version, fetch(:asdf_version, "v0.14.1")
+    set :asdf_version, fetch(:asdf_version, "0.15.0")
     set :asdf_setup, fetch(:asdf_setup, true)
     set :asdf_roles, fetch(:asdf_roles, :all)
     set :asdf_ruby_use_jemalloc, fetch(:asdf_ruby_use_jemalloc, true)
