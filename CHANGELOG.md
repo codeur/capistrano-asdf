@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.2
+
+Make ASDF version really usable with `asdf_version` variable.
+
 ## 1.5.1
 
 Remove update of ASDF which has been removed. See https://github.com/asdf-vm/asdf/pull/1806.
