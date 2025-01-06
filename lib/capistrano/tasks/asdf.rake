@@ -29,6 +29,7 @@ namespace :asdf do
             if fetch(:asdf_version) == version
               info "ASDF #{fetch(:asdf_version)} is already installed on #{fetch(:asdf_path)}"
             else
+              execute :git, "fetch", "origin"
               execute :git, "checkout", "v#{fetch(:asdf_version)}"
               info "ASDF is updated from #{version} to #{fetch(:asdf_version)} (on #{fetch(:asdf_path)})"
             end

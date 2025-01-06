@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.3
+
+Fix ASDF update when git data is not up-to-date.
+
 ## 1.5.2
 
 Make ASDF version really usable with `asdf_version` variable.
