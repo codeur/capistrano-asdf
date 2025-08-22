@@ -35,7 +35,11 @@ namespace :asdf do
             end
           end
         else
-          execute(:git, "clone", fetch(:asdf_repository), fetch(:asdf_path), "--branch", fetch(:asdf_version))
+          execute :git, "clone", fetch(:asdf_repository), fetch(:asdf_path)
+          within(fetch(:asdf_path)) do
+            execute :git, "checkout", "v#{fetch(:asdf_version)}"
+            execute :echo, fetch(:asdf_version), ">", "version.txt"
+          end
           info "ASDF #{fetch(:asdf_version)} is installed on #{fetch(:asdf_path)}"
         end
       end
@@ -121,8 +125,9 @@ namespace :load do
     set :asdf_roles, fetch(:asdf_roles, :all)
     set :asdf_ruby_use_jemalloc, fetch(:asdf_ruby_use_jemalloc, true)
     set :asdf_jemalloc_path, fetch(:asdf_jemalloc_path, "/usr/include/jemalloc")
-    set :asdf_tools, fetch(:asdf_tools, %w[ruby nodejs])
+    set :asdf_tools, fetch(:asdf_tools, File.read(".tool-versions").lines.map(&:split).to_h.keys) # Autodetect from .tool-versions
     set :asdf_map_ruby_bins, fetch(:asdf_map_ruby_bins, %w[rake gem bundle ruby rails])
     set :asdf_map_nodejs_bins, fetch(:asdf_map_nodejs_bins, %w[node npm yarn])
+    set :asdf_map_python_bins, fetch(:asdf_map_python_bins, %w[python pip])
   end
 end
