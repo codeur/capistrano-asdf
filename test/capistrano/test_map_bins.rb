@@ -26,9 +26,11 @@ module Capistrano
       # The rake file hooks itself onto this task as it loads.
       Rake::Task.define_task("deploy:updating")
       load File.expand_path("../../lib/capistrano/tasks/asdf.rake", __dir__)
-      Rake::Task["load:defaults"].invoke
-      # Keep the task away from its jemalloc branch, which opens an SSH connection.
+      # Listing the tools keeps the defaults away from the .tool-versions
+      # autodetection, and the task away from its jemalloc branch, which opens
+      # an SSH connection.
       set :asdf_tools, %w[nodejs]
+      Rake::Task["load:defaults"].invoke
     end
 
     def teardown

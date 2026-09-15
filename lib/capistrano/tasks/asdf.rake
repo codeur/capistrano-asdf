@@ -128,7 +128,10 @@ namespace :load do
     set :asdf_roles, fetch(:asdf_roles, :all)
     set :asdf_ruby_use_jemalloc, fetch(:asdf_ruby_use_jemalloc, true)
     set :asdf_jemalloc_path, fetch(:asdf_jemalloc_path, "/usr/include/jemalloc")
-    set :asdf_tools, fetch(:asdf_tools, File.read(".tool-versions").lines.map(&:split).to_h.keys) # Autodetect from .tool-versions
+    # Autodetected from the project .tool-versions, but only when the
+    # application has not listed its tools itself: a passed default is always
+    # evaluated, and reading a missing file would raise.
+    set :asdf_tools, fetch(:asdf_tools) { File.read(".tool-versions").lines.map(&:split).to_h.keys }
     set :asdf_map_ruby_bins, fetch(:asdf_map_ruby_bins, %w[rake gem bundle ruby rails])
     set :asdf_map_nodejs_bins, fetch(:asdf_map_nodejs_bins, %w[node npm yarn])
     set :asdf_map_python_bins, fetch(:asdf_map_python_bins, %w[python pip])
