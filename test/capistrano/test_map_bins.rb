@@ -40,7 +40,7 @@ module Capistrano
     def test_the_exported_path_holds_no_tilde
       Rake::Task["asdf:map_bins"].invoke
 
-      assert_equal "$HOME/.asdf/shims:$HOME/.asdf/bin:$PATH", exported_path
+      assert_equal "$HOME/.asdf/shims:$HOME/.asdf/bin:$PATH", exported("PATH")
     end
 
     def test_it_keeps_a_path_already_set_by_the_application
@@ -48,7 +48,15 @@ module Capistrano
 
       Rake::Task["asdf:map_bins"].invoke
 
-      assert_equal "$HOME/.asdf/shims:$HOME/.asdf/bin:/opt/custom/bin:$PATH", exported_path
+      assert_equal "$HOME/.asdf/shims:$HOME/.asdf/bin:/opt/custom/bin:$PATH", exported("PATH")
+    end
+
+    # Since 0.16 the asdf binary reads its data directory from the environment
+    # instead of deriving it from its own location.
+    def test_it_exports_the_asdf_data_dir
+      Rake::Task["asdf:map_bins"].invoke
+
+      assert_equal "$HOME/.asdf", exported("ASDF_DATA_DIR")
     end
 
     def test_an_absolute_asdf_path_is_left_alone
@@ -56,14 +64,14 @@ module Capistrano
 
       Rake::Task["asdf:map_bins"].invoke
 
-      assert_equal "/opt/asdf/shims:/opt/asdf/bin:$PATH", exported_path
+      assert_equal "/opt/asdf/shims:/opt/asdf/bin:$PATH", exported("PATH")
     end
 
     # What the shell actually receives, tilde expansion included.
-    def exported_path
+    def exported(variable)
       command = SSHKit::Command.new(:node, "--version").to_command
 
-      command[/PATH="([^"]*)"/, 1]
+      command[/#{variable}="([^"]*)"/, 1]
     end
   end
 end
