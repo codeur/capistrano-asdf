@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.5
+
+Fix the PATH built by `asdf:map_bins`. SSHKit exports the environment inside
+double quotes (`PATH="..."`), where a shell never expands a tilde, so the
+default `asdf_path` of `~/.asdf` produced two dead entries and left the asdf
+shims unreachable. The PATH now carries `$HOME`; an absolute `asdf_path` is
+still used as is.
+
 ## 1.5.3
 
 Fix ASDF update when git data is not up-to-date.
