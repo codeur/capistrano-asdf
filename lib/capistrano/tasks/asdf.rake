@@ -88,7 +88,10 @@ namespace :asdf do
   end
 
   task :map_bins do
-    path = "#{fetch(:asdf_path)}/shims:#{fetch(:asdf_path)}/bin:" + (SSHKit.config.default_env[:path] || "$PATH")
+    # SSHKit exports the environment inside double quotes (PATH="..."), where a
+    # shell leaves a tilde alone, so the PATH has to carry $HOME instead.
+    asdf_home = fetch(:asdf_path).sub(%r{\A~(?=/|\z)}, "$HOME")
+    path = "#{asdf_home}/shims:#{asdf_home}/bin:" + (SSHKit.config.default_env[:path] || "$PATH")
     SSHKit.config.default_env[:path] = path
 
     asdf_prefix = fetch(:asdf_prefix, -> { "#{fetch(:asdf_path)}/bin/asdf exec" })
