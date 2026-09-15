@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-09-15
+
+### Changed
+
+- `asdf_version` now defaults to `0.20.0`, and `asdf:setup` installs it the way
+  asdf is distributed since 0.16: the pre-compiled Linux binary of the release
+  is downloaded into `#{asdf_path}/bin`, instead of the repository being cloned
+  and a tag checked out. The architecture comes from `uname -m` on the target
+  host, so only Linux (Ubuntu) targets are supported.
+- `asdf:setup` reads the installed version from `asdf version` rather than from
+  the `version.txt` it used to write, so an update is detected whatever
+  installed asdf in the first place. The stale `version.txt` and the leftover
+  0.15 git clone in `#{asdf_path}` can be deleted by hand.
+- `asdf:map_bins` exports `ASDF_DATA_DIR`. The asdf binary no longer derives
+  its data directory from its own location, so a custom `asdf_path` needs it to
+  keep holding the plugins, the installs and the shims.
+
+### Removed
+
+- `asdf_repository` variable, which nothing downloads from any more.
+
 ## [1.5.5] - 2026-09-15
 
 ### Fixed
