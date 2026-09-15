@@ -35,10 +35,22 @@ However we strongly encourage you to use the `.tool-versions` for proper tool ve
 If you need some special settings, set those in the stage file for your server:
 
     # deploy.rb or stage file (staging.rb, production.rb or else)
+    set :asdf_version, '0.20.0'                     # defaults to '0.20.0'
+    set :asdf_setup, false                          # defaults to true
     set :asdf_path, '~/.my_asdf_installation_path'  # only needed if not '~/.asdf'
     set :asdf_tools, %w{ ruby }                            # defaults to %{ ruby nodejs }
     set :asdf_map_ruby_bins, %w{ bundle gem }              # defaults to %w{ rake gem bundle ruby rails }
     set :asdf_map_nodejs_bins, %w{ node npm }              # defaults to %w{ node npm yarn }
+
+### ASDF version: `:asdf_version`
+
+The deploy installs ASDF itself, and keeps it at the requested version. On every
+deploy, `asdf:setup` compares `asdf version` on the target host with
+`:asdf_version` and, when they differ, downloads the pre-compiled binary of that
+release into `#{fetch(:asdf_path)}/bin`.
+
+Set `:asdf_setup` to `false` if you would rather install and update ASDF
+yourself.
 
 ### Custom ASDF path: `:asdf_path`
 
@@ -74,9 +86,9 @@ For example; if you just want to map `node` and `npm` nodejs binaries, you may s
 
 ## Restrictions
 
-Capistrano can't use ASDF to install rubies, nodes or other tools yet.
-So on the servers you are deploying to, you will have to manually use ASDF to install the
-proper rubies, nodes or other tools.
+ASDF is installed from the pre-compiled Linux binary of its GitHub release, so
+the target hosts have to run Linux. Ubuntu is the only distribution this is used
+on, and `uname -m` has to answer `x86_64` or `aarch64`.
 
 ## How it works
 

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../asdf/release"
+
 namespace :asdf do
   desc "Install ASDF tools on deploy"
   task :deploy do
@@ -19,29 +21,32 @@ namespace :asdf do
     end
   end
 
-  desc "Setup ASDF on the target host"
+  desc "Install ASDF, or update it to :asdf_version, on the target host"
   task :setup do
-    if fetch(:asdf_setup)
-      on roles(fetch(:asdf_roles)) do
-        if test("[ -d #{fetch(:asdf_path)} ]")
-          within(fetch(:asdf_path)) do
-            version = capture(:cat, "version.txt").strip
-            if fetch(:asdf_version) == version
-              info "ASDF #{fetch(:asdf_version)} is already installed on #{fetch(:asdf_path)}"
-            else
-              execute :git, "fetch", "origin"
-              execute :git, "checkout", "v#{fetch(:asdf_version)}"
-              info "ASDF is updated from #{version} to #{fetch(:asdf_version)} (on #{fetch(:asdf_path)})"
-            end
-          end
-        else
-          execute :git, "clone", fetch(:asdf_repository), fetch(:asdf_path)
-          within(fetch(:asdf_path)) do
-            execute :git, "checkout", "v#{fetch(:asdf_version)}"
-            execute :echo, fetch(:asdf_version), ">", "version.txt"
-          end
-          info "ASDF #{fetch(:asdf_version)} is installed on #{fetch(:asdf_path)}"
-        end
+    next unless fetch(:asdf_setup)
+
+    version = fetch(:asdf_version)
+    on roles(fetch(:asdf_roles)) do
+      bin_path = "#{fetch(:asdf_path)}/bin"
+      installed = if test("[ -x #{bin_path}/asdf ]")
+        Capistrano::Asdf::Release.installed_version(capture(:asdf, "version", raise_on_non_zero_exit: false))
+      end
+
+      if installed == version
+        info "ASDF #{version} is already installed on #{fetch(:asdf_path)}"
+        next
+      end
+
+      url = Capistrano::Asdf::Release.download_url(version, capture(:uname, "-m"))
+      execute :mkdir, "-p", bin_path
+      # `asdf update` refuses to upgrade the binary it ships as, so the release
+      # archive is downloaded over the installed one.
+      execute "curl -fsSL #{url} | tar -xzf - -C #{bin_path} asdf"
+
+      if installed
+        info "ASDF is updated from #{installed} to #{version} (on #{fetch(:asdf_path)})"
+      else
+        info "ASDF #{version} is installed on #{fetch(:asdf_path)}"
       end
     end
   end
@@ -93,6 +98,9 @@ namespace :asdf do
     asdf_home = fetch(:asdf_path).sub(%r{\A~(?=/|\z)}, "$HOME")
     path = "#{asdf_home}/shims:#{asdf_home}/bin:" + (SSHKit.config.default_env[:path] || "$PATH")
     SSHKit.config.default_env[:path] = path
+    # Since 0.16 the asdf binary no longer derives its data directory from its
+    # own location, so a custom :asdf_path has to be handed over explicitly.
+    SSHKit.config.default_env[:asdf_data_dir] = asdf_home
 
     asdf_prefix = fetch(:asdf_prefix, -> { "#{fetch(:asdf_path)}/bin/asdf exec" })
     SSHKit.config.command_map[:asdf] = "#{fetch(:asdf_path)}/bin/asdf"
@@ -122,8 +130,7 @@ end
 namespace :load do
   task :defaults do
     set :asdf_path, fetch(:asdf_path, "~/.asdf")
-    set :asdf_repository, fetch(:asdf_repository, "https://github.com/asdf-vm/asdf.git")
-    set :asdf_version, fetch(:asdf_version, "0.15.0")
+    set :asdf_version, fetch(:asdf_version, "0.20.0")
     set :asdf_setup, fetch(:asdf_setup, true)
     set :asdf_roles, fetch(:asdf_roles, :all)
     set :asdf_ruby_use_jemalloc, fetch(:asdf_ruby_use_jemalloc, true)
