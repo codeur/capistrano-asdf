@@ -39,6 +39,7 @@ If you need some special settings, set those in the stage file for your server:
     set :asdf_tools, %w{ ruby }                            # defaults to %{ ruby nodejs }
     set :asdf_map_ruby_bins, %w{ bundle gem }              # defaults to %w{ rake gem bundle ruby rails }
     set :asdf_map_nodejs_bins, %w{ node npm }              # defaults to %w{ node npm yarn }
+    set :asdf_ruby_use_yjit, false                         # defaults to true
 
 ### Custom ASDF path: `:asdf_path`
 
@@ -71,6 +72,19 @@ to define which one you want to be mapped.
 For example; if you just want to map `node` and `npm` nodejs binaries, you may set `:asdf_map_nodejs_bins`:
 
     set :asdf_map_nodejs_bins, %w{ node npm }
+
+### Ruby with YJIT: `:asdf_ruby_use_yjit`
+
+Ruby only builds YJIT when it finds `rustc` (1.58 or later) while it compiles.
+When `rustc` is in the server's default `PATH`, as with a system package, the
+gem builds Ruby with `--enable-yjit`. A Ruby of your `.tool-versions` that was
+built without YJIT is built again at the next deploy, in its own directory: it
+keeps running until the new build replaces its files. Without `rustc`, nothing
+changes.
+
+To build Ruby without YJIT, even when `rustc` is there:
+
+    set :asdf_ruby_use_yjit, false
 
 ## Restrictions
 
