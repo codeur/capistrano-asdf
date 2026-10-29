@@ -2,35 +2,18 @@
 
 require "test_helper"
 
-require "capistrano/all"
-require "sshkit"
-
-# A Capfile mixes the DSL into the top-level object; the rake file under test
-# reaches for `Capistrano::DSL.stages` as it loads, which relies on it.
-include Capistrano::DSL # standard:disable Style/MixinUsage
-
 module Capistrano
   # `asdf:map_bins` prepends the asdf shims to the PATH that SSHKit exports in
   # front of every remote command. SSHKit writes that environment inside double
   # quotes (`PATH="..."`), and a shell does not expand a tilde there, so the
   # PATH must be built from `$HOME` rather than from `~`.
   class TestMapBins < Minitest::Test
-    include Capistrano::DSL
+    include AsdfTasks
 
     def setup
-      # `capistrano/all` turns Rake's trace on; keep it out of the test output.
-      Rake.application.options.trace = false
-      Rake::Task.clear
-      Capistrano::Configuration.reset!
-      SSHKit.config.default_env = {}
-      # The rake file hooks itself onto this task as it loads.
-      Rake::Task.define_task("deploy:updating")
-      load File.expand_path("../../lib/capistrano/tasks/asdf.rake", __dir__)
-      # Listing the tools keeps the defaults away from the .tool-versions
-      # autodetection, and the task away from its jemalloc branch, which opens
-      # an SSH connection.
-      set :asdf_tools, %w[nodejs]
-      Rake::Task["load:defaults"].invoke
+      # Without ruby, the task stays away from the Ruby build options, which
+      # open an SSH connection.
+      load_asdf_tasks(%w[nodejs])
     end
 
     def teardown

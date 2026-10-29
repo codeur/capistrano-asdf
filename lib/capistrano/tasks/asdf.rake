@@ -59,6 +59,19 @@ namespace :asdf do
           end
         end
         execute(:asdf, "install")
+
+        # `asdf install` skips a version that is already there, so a Ruby built
+        # before rustc was around would never get YJIT: build it again in its
+        # own directory. ruby-build compiles in a temporary directory and only
+        # then replaces the files, so this Ruby keeps working meanwhile.
+        if SSHKit.config.default_env[:ruby_configure_opts]&.include?("--enable-yjit")
+          ruby_without_yjit = capture(:asdf, "exec", "ruby", "-e", "'print RbConfig::CONFIG[%q(prefix)] if RbConfig::CONFIG[%q(YJIT_SUPPORT)] == %q(no)'")
+          unless ruby_without_yjit.empty?
+            with(asdf_install_type: "version", asdf_install_version: File.basename(ruby_without_yjit), asdf_install_path: ruby_without_yjit) do
+              execute("#{fetch(:asdf_path)}/plugins/ruby/bin/install")
+            end
+          end
+        end
       end
     end
   end
@@ -97,11 +110,21 @@ namespace :asdf do
     asdf_prefix = fetch(:asdf_prefix, -> { "#{fetch(:asdf_path)}/bin/asdf exec" })
     SSHKit.config.command_map[:asdf] = "#{fetch(:asdf_path)}/bin/asdf"
 
-    if fetch(:asdf_tools).include?("ruby") && fetch(:asdf_ruby_use_jemalloc)
+    if fetch(:asdf_tools).include?("ruby")
       on roles(fetch(:asdf_roles)) do
-        if test("[ -f #{fetch(:asdf_jemalloc_path)}/jemalloc.h ]")
-          SSHKit.config.default_env.merge!(ruby_configure_opts: "--with-jemalloc=#{fetch(:asdf_jemalloc_path)}")
+        ruby_configure_opts = []
+        if fetch(:asdf_ruby_use_jemalloc) && test("[ -f #{fetch(:asdf_jemalloc_path)}/jemalloc.h ]")
+          ruby_configure_opts << "--with-jemalloc=#{fetch(:asdf_jemalloc_path)}"
         end
+        # Ruby builds YJIT by itself whenever it finds rustc, hence the explicit
+        # opt-out. Asking for it turns a rustc unable to build it into a failed
+        # install instead of a Ruby silently built without YJIT.
+        if !fetch(:asdf_ruby_use_yjit)
+          ruby_configure_opts << "--disable-yjit"
+        elsif test("command -v rustc")
+          ruby_configure_opts << "--enable-yjit"
+        end
+        SSHKit.config.default_env.merge!(ruby_configure_opts: ruby_configure_opts.join(" ")) if ruby_configure_opts.any?
       end
     end
 
@@ -128,6 +151,7 @@ namespace :load do
     set :asdf_roles, fetch(:asdf_roles, :all)
     set :asdf_ruby_use_jemalloc, fetch(:asdf_ruby_use_jemalloc, true)
     set :asdf_jemalloc_path, fetch(:asdf_jemalloc_path, "/usr/include/jemalloc")
+    set :asdf_ruby_use_yjit, fetch(:asdf_ruby_use_yjit, true)
     # Autodetected from the project .tool-versions, but only when the
     # application has not listed its tools itself: a passed default is always
     # evaluated, and reading a missing file would raise.
